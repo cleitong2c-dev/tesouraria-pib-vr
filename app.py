@@ -9,11 +9,8 @@ st.set_page_config(
     layout="wide"
 )
 
-# URL da sua API do Google Apps Script
+# URL da API do Google Apps Script
 API_URL = "https://script.google.com/macros/s/AKfycbxCScjh5WdBOG_jpnxkxGS3kvLUA3cNz7U_jHh6_GPhjl7wIiGTBrkXUXJbfBG_gxen/exec"
-
-# Logomarca PIB VR (Base64)
-LOGO_URL = "https://raw.githubusercontent.com/cleitong2c/tesouraria-pib-vr/main/logo.jpg" # Ou imagem do repositório
 
 # Gestão de Sessão / Login
 if "logged_in" not in st.session_state:
@@ -73,8 +70,15 @@ else:
         uploaded_file = st.file_uploader("Selecione o ficheiro CSV de Entradas ou Saídas", type=["csv", "pdf", "png", "jpg"])
         
         if uploaded_file is not None:
-            if uploaded_file.name.endswith('.csv'):
-                df = pd.read_csv(uploaded_file, encoding='utf-8', errors='ignore')
+            if uploaded_file.name.lower().endswith('.csv'):
+                try:
+                    # Tenta ler em UTF-8 primeiro
+                    df = pd.read_csv(uploaded_file, encoding='utf-8', sep=None, engine='python')
+                except Exception:
+                    uploaded_file.seek(0)
+                    # Se falhar, tenta ler em Latin-1 (padrão comum em CSVs em português)
+                    df = pd.read_csv(uploaded_file, encoding='latin1', sep=None, engine='python')
+
                 st.success(f"Ficheiro '{uploaded_file.name}' carregado com sucesso! ({len(df)} registos encontrados)")
                 st.dataframe(df.head(10))
                 
